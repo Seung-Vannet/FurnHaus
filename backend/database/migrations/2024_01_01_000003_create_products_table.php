@@ -24,7 +24,7 @@ return new class extends Migration
             $table->string('color')->nullable();
             $table->string('dimensions')->nullable();
             $table->decimal('weight', 8, 2)->nullable();
-            $table->string('featured_image');
+            $table->longText('featured_image');
             $table->json('gallery_images')->nullable();
             $table->decimal('rating', 3, 2)->default(0);
             $table->integer('reviews_count')->default(0);

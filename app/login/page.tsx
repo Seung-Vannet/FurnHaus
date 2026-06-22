@@ -34,6 +34,7 @@ export default function Login() {
       const result = await loginUser(loginEmail, loginPassword);
       if (result.success && result.data?.token) {
         localStorage.setItem("token", result.data.token);
+        localStorage.setItem("admin_token", result.data.token);
         localStorage.setItem("user", JSON.stringify(result.data.user));
         router.push("/dashboard");
       } else {
@@ -68,6 +69,7 @@ export default function Login() {
 
       if (result.success && result.data?.token) {
         localStorage.setItem("token", result.data.token);
+        localStorage.setItem("admin_token", result.data.token);
         localStorage.setItem("user", JSON.stringify(result.data.user));
         router.push("/dashboard");
       } else {

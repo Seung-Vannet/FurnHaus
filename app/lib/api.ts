@@ -1,5 +1,27 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
 
+function normalizeToken(token: string): string {
+  return token.replace(/^Bearer\s+/i, "").trim();
+}
+
+function getAuthJsonHeaders(
+  token: string,
+  includeContentType: boolean = false,
+): HeadersInit {
+  const normalizedToken = normalizeToken(token);
+
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${normalizedToken}`,
+    Accept: "application/json",
+  };
+
+  if (includeContentType) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  return headers;
+}
+
 // ============ AUTHENTICATION ============
 export async function registerUser(data: {
   first_name: string;
@@ -280,7 +302,7 @@ export async function getBlogPost(id: string | number) {
 // ============ ADMIN ============
 export async function getAdminStats(token: string) {
   const response = await fetch(`${API_URL}/admin/dashboard/stats`, {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: getAuthJsonHeaders(token),
   });
   return response.json();
 }
@@ -289,11 +311,7 @@ export async function getAdminStats(token: string) {
 export async function getAdminProducts(token: string, page?: number) {
   const query = page ? `?page=${page}` : "";
   const response = await fetch(`${API_URL}/admin/products${query}`, {
-    headers: { 
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-      "Accept": "application/json"
-    },
+    headers: getAuthJsonHeaders(token),
     mode: "cors",
   });
   return response.json();
@@ -324,12 +342,13 @@ export async function createProduct(
   },
 ) {
   try {
+    if (!token?.trim()) {
+      throw new Error("Missing auth token. Please log in again.");
+    }
+
     const response = await fetch(`${API_URL}/admin/products`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      headers: getAuthJsonHeaders(token, true),
       body: JSON.stringify(data),
       mode: "cors",
     });
@@ -382,10 +401,7 @@ export async function updateProduct(
 ) {
   const response = await fetch(`${API_URL}/admin/products/${productId}`, {
     method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
+    headers: getAuthJsonHeaders(token, true),
     body: JSON.stringify(data),
   });
   return response.json();
@@ -395,10 +411,7 @@ export async function deleteProduct(token: string, productId: string | number) {
   try {
     const response = await fetch(`${API_URL}/admin/products/${productId}`, {
       method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      headers: getAuthJsonHeaders(token),
       mode: "cors",
     });
 
@@ -428,10 +441,7 @@ export async function deleteProduct(token: string, productId: string | number) {
 export async function getAdminOrders(token: string, page?: number) {
   const query = page ? `?page=${page}` : "";
   const response = await fetch(`${API_URL}/admin/orders${query}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      Accept: "application/json",
-    },
+    headers: getAuthJsonHeaders(token),
   });
   if (!response.ok) {
     throw new Error(`HTTP ${response.status}: ${response.statusText}`);

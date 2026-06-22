@@ -24,7 +24,15 @@ export function getStoredUser(): AuthUser | null {
 
 export function getStoredToken(): string | null {
   if (typeof window === "undefined") return null;
-  return localStorage.getItem("token");
+
+  // Support legacy/admin key names to avoid silent unauthenticated requests.
+  const token =
+    localStorage.getItem("token") ||
+    localStorage.getItem("admin_token") ||
+    localStorage.getItem("access_token") ||
+    localStorage.getItem("auth_token");
+
+  return token || null;
 }
 
 export function isAdminUser(): boolean {
@@ -39,6 +47,9 @@ export function isAuthenticated(): boolean {
 export function logout(): void {
   if (typeof window !== "undefined") {
     localStorage.removeItem("token");
+    localStorage.removeItem("admin_token");
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("auth_token");
     localStorage.removeItem("user");
   }
 }
@@ -46,6 +57,8 @@ export function logout(): void {
 export function setAuth(token: string, user: AuthUser): void {
   if (typeof window !== "undefined") {
     localStorage.setItem("token", token);
+    // Mirror token under admin alias for compatibility with older client code.
+    localStorage.setItem("admin_token", token);
     localStorage.setItem("user", JSON.stringify(user));
   }
 }
